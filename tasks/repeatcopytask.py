@@ -1,7 +1,7 @@
 """Copy Task NTM model."""
 import random
 
-from attr import attrs, attrib, Factory
+from attr import attrs, attrib, Factory, validators
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -76,6 +76,7 @@ class RepeatCopyTaskParams(object):
     name = attrib(default="repeat-copy-task")
     controller_size = attrib(default=100, convert=int)
     controller_layers = attrib(default=1, convert=int)
+    controller_type = attrib(default='NTM-LSTM', convert=str, validator=validators.in_(['NTM-LSTM', 'NTM-FFW', 'LSTM']))
     num_heads = attrib(default=1, convert=int)
     sequence_width = attrib(default=8, convert=int)
     sequence_min_len = attrib(default=1, convert=int)
