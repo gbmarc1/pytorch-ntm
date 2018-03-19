@@ -278,7 +278,9 @@ def main():
     # Initialize Cuda Variable redirection
     if args.cuda and torch.cuda.is_available():
         Variable.isCuda = True
-
+    else:
+        Variable.isCuda = False
+        
     # Initialize the model
     model = init_model(args)
 
