@@ -15,6 +15,7 @@ import argcomplete
 import torch
 from ntm.Variable import Variable
 import numpy as np
+from ntm.utils import calculate_num_params
 
 
 LOGGER = logging.getLogger(__name__)
@@ -285,7 +286,7 @@ def main():
     if args.cuda and torch.cuda.is_available():
         model.net.enable_cuda()
 
-    LOGGER.info("Total number of parameters: %d", model.net.calculate_num_params())
+    LOGGER.info("Total number of parameters: %d", calculate_num_params(model.net))
     train_model(model, args)
 
 
