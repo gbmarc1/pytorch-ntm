@@ -13,7 +13,7 @@ import sys
 import attr
 import argcomplete
 import torch
-from torch.autograd import Variable
+from ntm.Variable import Variable
 import numpy as np
 
 
@@ -113,11 +113,11 @@ def train_batch(net, criterion, optimizer, X, Y):
     clip_grads(net)
     optimizer.step()
 
-    y_out_binarized = y_out.clone().data
+    y_out_binarized = y_out.cpu().clone().data
     y_out_binarized.apply_(lambda x: 0 if x < 0.5 else 1)
 
     # The cost is the number of error bits per sequence
-    cost = torch.sum(torch.abs(y_out_binarized - Y.data))
+    cost = torch.sum(torch.abs(y_out_binarized - Y.cpu().data))
 
     return loss.data[0], cost / batch_size
 
@@ -214,6 +214,8 @@ def init_arguments():
                         help="Path for saving checkpoint data (default: './')")
     parser.add_argument('--report-interval', type=int, default=REPORT_INTERVAL,
                         help="Reporting interval")
+    parser.add_argument('--cuda', type=bool, default=False,
+                        help="Cudaize Variable")
 
     argcomplete.autocomplete(parser)
 
@@ -272,8 +274,16 @@ def main():
     # Initialize random
     init_seed(args.seed)
 
+    # Initialize Cuda Variable redirection
+    if args.cuda and torch.cuda.is_available():
+        Variable.isCuda = True
+
     # Initialize the model
     model = init_model(args)
+
+    # Initialize Cuda model
+    if args.cuda and torch.cuda.is_available():
+        model.net.enable_cuda()
 
     LOGGER.info("Total number of parameters: %d", model.net.calculate_num_params())
     train_model(model, args)

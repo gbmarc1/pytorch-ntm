@@ -1,7 +1,7 @@
 """All in one NTM. Encapsulation of all components."""
 import torch
 from torch import nn
-from torch.autograd import Variable
+from ntm.Variable import Variable
 
 from .ntm import NTM
 from .controller import LSTMController, FFWController
@@ -53,6 +53,16 @@ class EncapsulatedNTM(nn.Module):
 
         self.ntm = NTM(num_inputs, num_outputs, controller, memory, heads)
         self.memory = memory
+
+    def enable_cuda(self):
+        self.cuda()
+        self.ntm.controller.cuda()
+        self.ntm.cuda()
+        for head in self.ntm.heads:
+            head.cuda()
+        self.memory.cuda()
+
+        print('Cuda Enabled!')
 
     def init_sequence(self, batch_size):
         """Initializing the state."""

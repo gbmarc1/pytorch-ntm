@@ -4,7 +4,7 @@ import random
 from attr import attrs, attrib, Factory
 import torch
 from torch import nn
-from torch.autograd import Variable
+from ntm.Variable import Variable
 from torch import optim
 import numpy as np
 

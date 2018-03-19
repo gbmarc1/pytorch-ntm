@@ -1,7 +1,7 @@
 """NTM Read and Write Heads."""
 import torch
 from torch import nn
-from torch.autograd import Variable
+from ntm.Variable import Variable
 import torch.nn.functional as F
 import numpy as np
 

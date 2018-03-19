@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import torch
 from torch import nn
-from torch.autograd import Variable
+from ntm.Variable import Variable
 import torch.nn.functional as F
 
 

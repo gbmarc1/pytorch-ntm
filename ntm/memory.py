@@ -1,6 +1,6 @@
 """An NTM's memory implementation."""
 import torch
-from torch.autograd import Variable
+from ntm.Variable import Variable
 import torch.nn.functional as F
 from torch import nn
 import numpy as np
