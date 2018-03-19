@@ -73,9 +73,3 @@ class EncapsulatedNTM(nn.Module):
         o, self.previous_state = self.ntm(x, self.previous_state)
         return o, self.previous_state
 
-    def calculate_num_params(self):
-        """Returns the total number of parameters."""
-        num_params = 0
-        for p in self.parameters():
-            num_params += p.data.view(-1).size(0)
-        return num_params
