@@ -37,12 +37,8 @@ class EncapsulatedNTM(nn.Module):
         # Create the NTM components
         memory = NTMMemory(N, M)
 
-        if controller_type == 'LSTM':
-            controller = LSTMController(num_inputs + M*num_heads, controller_size, controller_layers)
-        elif controller_type == 'FFW':
-            controller = FFWController(num_inputs + M * num_heads, controller_size, controller_layers)
-        else:
-            raise ValueError('Unknown controller type.')
+        CONTROLLERS = {'NTM-LSTM': LSTMController, 'NTM-FFW': FFWController}
+        controller = CONTROLLERS[controller_type](num_inputs + M*num_heads, controller_size, controller_layers)
 
         heads = nn.ModuleList([])
         for i in range(num_heads):
