@@ -8,7 +8,7 @@ from ntm.Variable import Variable
 from torch import optim
 import numpy as np
 
-from ntm.aio import EncapsulatedNTM
+from ntm.aio import EncapsulatedNTM, VanillaLSTM
 
 
 # Generator of randomized test sequences
@@ -93,12 +93,27 @@ class CopyTaskModelTraining(object):
 
     @net.default
     def default_net(self):
+
+        # Choose between Neural Turing Machine or Vanilla LSTM
+        ENCAPSULATION = {'NTM-LSTM': EncapsulatedNTM, 'NTM-FFW': EncapsulatedNTM, 'LSTM':VanillaLSTM}
+        encapsulation = ENCAPSULATION[self.params.controller_type]
+
+        # Arguments for Classical model
         # We have 1 additional input for the delimiter which is passed on a
         # separate "control" channel
-        net = EncapsulatedNTM(self.params.sequence_width + 1, self.params.sequence_width,
-                              self.params.controller_size, self.params.controller_layers,
-                              self.params.num_heads,
-                              self.params.memory_n, self.params.memory_m, self.params.controller_type)
+        classic_args = (self.params.sequence_width + 1, self.params.sequence_width,
+                        self.params.controller_size, self.params.controller_layers)
+
+        # Arguments for Neural Turing Machine Model
+        ntm_args = classic_args + (self.params.num_heads,
+                                   self.params.memory_n, self.params.memory_m,
+                                   self.params.controller_type)
+
+        # Choice of Args
+        ARGUMENTS = {EncapsulatedNTM: ntm_args, VanillaLSTM: classic_args}
+
+        net = encapsulation(*ARGUMENTS[encapsulation])
+
         return net
 
     @dataloader.default
