@@ -266,7 +266,8 @@ def init_logging():
                         level=logging.DEBUG)
 
 
-def main():
+def init_env():
+
     init_logging()
 
     # Initialize arguments
@@ -280,7 +281,7 @@ def main():
         Variable.isCuda = True
     else:
         Variable.isCuda = False
-        
+
     # Initialize the model
     model = init_model(args)
 
@@ -288,6 +289,11 @@ def main():
     if args.cuda and torch.cuda.is_available():
         model.net.enable_cuda()
 
+    return model, args
+
+def main():
+
+    model, args = init_env()
     LOGGER.info("Total number of parameters: %d", calculate_num_params(model.net))
     train_model(model, args)
 
