@@ -19,17 +19,19 @@ def _split_cols(mat, lengths):
 class NTMHeadBase(nn.Module):
     """An NTM Read/Write Head."""
 
-    def __init__(self, memory, controller_size):
+    def __init__(self, memory, controller_size, head_activation_type):
         """Initilize the read/write head.
 
         :param memory: The :class:`NTMMemory` to be addressed by the head.
         :param controller_size: The size of the internal representation.
+        :param head_activation_type: softplus or Relu activations for heads
         """
         super(NTMHeadBase, self).__init__()
 
         self.memory = memory
         self.N, self.M = memory.size()
         self.controller_size = controller_size
+        self.head_activation_type = head_activation_type
 
     def create_new_state(self, batch_size):
         raise NotImplementedError
@@ -43,10 +45,10 @@ class NTMHeadBase(nn.Module):
     def _address_memory(self, k, β, g, s, γ, w_prev):
         # Handle Activations
         k = k.clone()
-        β = F.softplus(β)
+        β = self.head_activation_type(β) #softplus
         g = F.sigmoid(g)
-        s = F.softmax(F.softplus(s), dim=1)
-        γ = 1 + F.softplus(γ)
+        s = F.softmax(self.head_activation_type(s), dim=1) #softplus
+        γ = 1 + self.head_activation_type(γ) #softplus
 
         w = self.memory.address(k, β, g, s, γ, w_prev)
 
@@ -54,11 +56,11 @@ class NTMHeadBase(nn.Module):
 
 
 class NTMReadHead(NTMHeadBase):
-    def __init__(self, memory, controller_size):
-        super(NTMReadHead, self).__init__(memory, controller_size)
+    def __init__(self, memory, controller_size, head_activation_type):
+        super(NTMReadHead, self).__init__(memory, controller_size, head_activation_type)
 
         # Corresponding to k, β, g, s, γ sizes from the paper
-        self.read_lengths = [self.M, 1, 1, 3, 1]
+        self.read_lengths = [self.M, 1, 1, self.shift_size, 1]
         self.fc_read = nn.Linear(controller_size, sum(self.read_lengths))
         self.reset_parameters()
 
@@ -91,11 +93,11 @@ class NTMReadHead(NTMHeadBase):
 
 
 class NTMWriteHead(NTMHeadBase):
-    def __init__(self, memory, controller_size):
-        super(NTMWriteHead, self).__init__(memory, controller_size)
+    def __init__(self, memory, controller_size, head_activation_type):
+        super(NTMWriteHead, self).__init__(memory, controller_size, head_activation_type)
 
         # Corresponding to k, β, g, s, γ, e, a sizes from the paper
-        self.write_lengths = [self.M, 1, 1, 3, 1, self.M, self.M]
+        self.write_lengths = [self.M, 1, 1, self.shift_size, 1, self.M, self.M]
         self.fc_write = nn.Linear(controller_size, sum(self.write_lengths))
         self.reset_parameters()
 

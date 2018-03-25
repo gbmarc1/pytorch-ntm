@@ -13,7 +13,7 @@ import torch.nn.functional as F
 class EncapsulatedNTM(nn.Module):
 
     def __init__(self, num_inputs, num_outputs,
-                 controller_size, controller_layers, num_heads, N, M, controller_type):
+                 controller_size, controller_layers, num_heads, N, M, controller_type, head_activation_type):
         """Initialize an EncapsulatedNTM.
 
         :param num_inputs: External number of inputs.
@@ -23,6 +23,7 @@ class EncapsulatedNTM(nn.Module):
         :param num_heads: Number of heads.
         :param N: Number of rows in the memory bank.
         :param M: Number of cols/features in the memory bank.
+        :param head_activation_type: softplus or Relu activations for heads
         """
         super(EncapsulatedNTM, self).__init__()
 
@@ -44,8 +45,8 @@ class EncapsulatedNTM(nn.Module):
         heads = nn.ModuleList([])
         for i in range(num_heads):
             heads += [
-                NTMReadHead(memory, controller_size),
-                NTMWriteHead(memory, controller_size)
+                NTMReadHead(memory, controller_size, head_activation_type),
+                NTMWriteHead(memory, controller_size, head_activation_type)
             ]
 
         self.ntm = NTM(num_inputs, num_outputs, controller, memory, heads)

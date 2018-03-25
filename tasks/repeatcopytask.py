@@ -7,6 +7,7 @@ from torch import nn
 from torch.autograd import Variable
 from torch import optim
 import numpy as np
+import torch.nn.functional as F
 
 from ntm.aio import EncapsulatedNTM, VanillaLSTM
 
@@ -78,6 +79,7 @@ class RepeatCopyTaskParams(object):
     controller_layers = attrib(default=1, convert=int)
     controller_type = attrib(default='NTM-LSTM', convert=str, validator=validators.in_(['NTM-LSTM', 'NTM-FFW', 'LSTM']))
     num_heads = attrib(default=1, convert=int)
+    head_activation_type = attrib(default='softplus', convert=str, validator=validators.in_(['softplus', 'relu']))
     sequence_width = attrib(default=8, convert=int)
     sequence_min_len = attrib(default=1, convert=int)
     sequence_max_len = attrib(default=10, convert=int)
@@ -106,6 +108,8 @@ class RepeatCopyTaskModelTraining(object):
         ENCAPSULATION = {'NTM-LSTM': EncapsulatedNTM, 'NTM-FFW': EncapsulatedNTM, 'LSTM':VanillaLSTM}
         encapsulation = ENCAPSULATION[self.params.controller_type]
 
+        head_activation_type = {'relu': F.relu, 'softplus': F.softplus}
+
         # Arguments for Classical model
         # We have 1 additional input for the delimiter which is passed on a
         # separate "control" channel
@@ -115,7 +119,8 @@ class RepeatCopyTaskModelTraining(object):
         # Arguments for Neural Turing Machine Model
         ntm_args = classic_args + (self.params.num_heads,
                                    self.params.memory_n, self.params.memory_m,
-                                   self.params.controller_type)
+                                   self.params.controller_type,
+                                   head_activation_type[self.params.head_activation_type])
 
         # Choice of Args
         ARGUMENTS = {EncapsulatedNTM: ntm_args, VanillaLSTM: classic_args}
