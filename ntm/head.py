@@ -32,6 +32,7 @@ class NTMHeadBase(nn.Module):
         self.N, self.M = memory.size()
         self.controller_size = controller_size
         self.head_activation_type = head_activation_type
+        self.shift_size = 3
 
     def create_new_state(self, batch_size):
         raise NotImplementedError
