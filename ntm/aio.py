@@ -35,6 +35,7 @@ class EncapsulatedNTM(nn.Module):
         self.num_heads = num_heads
         self.N = N
         self.M = M
+        self.multi_target = False
 
         # Create the NTM components
         memory = NTMMemory(N, M)

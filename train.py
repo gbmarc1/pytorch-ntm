@@ -23,10 +23,12 @@ LOGGER = logging.getLogger(__name__)
 
 from tasks.copytask import CopyTaskModelTraining, CopyTaskParams
 from tasks.repeatcopytask import RepeatCopyTaskModelTraining, RepeatCopyTaskParams
+from tasks.warptask import WarpTaskModelTraining, WarpTaskParams
 
 TASKS = {
     'copy': (CopyTaskModelTraining, CopyTaskParams),
-    'repeat-copy': (RepeatCopyTaskModelTraining, RepeatCopyTaskParams)
+    'repeat-copy': (RepeatCopyTaskModelTraining, RepeatCopyTaskParams),
+    'warp': (WarpTaskModelTraining, WarpTaskParams)
 }
 
 
@@ -105,20 +107,29 @@ def train_batch(net, criterion, optimizer, X, Y):
         net(X[i])
 
     # Read the output (no input given)
-    y_out = Variable(torch.zeros(Y.size()))
+    y_out = Variable(torch.zeros(Y.size()[:2]+(net.num_outputs,)))
     for i in range(outp_seq_len):
         y_out[i], _ = net()
 
-    loss = criterion(y_out, Y)
+    if net.multi_target:
+        loss = 0
+        for y_i, Y_i in zip(y_out, Y):
+            loss += criterion(y_i, Y_i.squeeze())
+    else:
+        loss = criterion(y_out, Y)
+
     loss.backward()
     clip_grads(net)
     optimizer.step()
 
-    y_out_binarized = y_out.cpu().clone().data
-    y_out_binarized.apply_(lambda x: 0 if x < 0.5 else 1)
+    if net.multi_target:
+        cost = 0
+    else:
+        y_out_binarized = y_out.cpu().clone().data
+        y_out_binarized.apply_(lambda x: 0 if x < 0.5 else 1)
 
-    # The cost is the number of error bits per sequence
-    cost = torch.sum(torch.abs(y_out_binarized - Y.cpu().data))
+        # The cost is the number of error bits per sequence
+        cost = torch.sum(torch.abs(y_out_binarized - Y.cpu().data))
 
     return loss.data[0], cost / batch_size
 
